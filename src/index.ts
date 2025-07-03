@@ -2,6 +2,8 @@ import { Client } from "pg";
 import express from 'express';
 
 const app = express();
+app.use(express.json());
+
 
 
 
@@ -30,9 +32,21 @@ app.post("/signup" , async(req, res) =>{
     const username = req.body.username;
     const password = req.body.password;
 
-    const response =  await pgClient.query(`INSERT INTO "User" (username, password) VALUES (${username}, ${password})`);
+    try{
+        //const response =  await pgClient.query(`INSERT INTO "User" (username, password) VALUES ('${username}', '${password}')`);
+            const response =  await pgClient.query('INSERT INTO "User" (username, password) VALUES ($1, $2)', [username, password]);
     res.json({
-
+            message: "User created successfully"
     })
 
+    }catch(e){
+        res.json({
+            message : 'error creating user',
+        })
+    }
+
+    
+
 })
+
+app.listen(3000);
