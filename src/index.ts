@@ -1,9 +1,13 @@
 import { Client } from "pg";
 import express from 'express';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
+const pgClient = new Client(process.env.DATABASE_URL);
 
 
 
@@ -31,17 +35,36 @@ pgClient.connect();
 app.post("/signup" , async(req, res) =>{
     const username = req.body.username;
     const password = req.body.password;
+    const email = req.body.email;
+
+    const city = req.body.city;
+    const country = req.body.country;
+    const street = req.body.street;
+    const pincode = req.body.pincode;
 
     try{
         //const response =  await pgClient.query(`INSERT INTO "User" (username, password) VALUES ('${username}', '${password}')`);
-            const response =  await pgClient.query('INSERT INTO "User" (username, password) VALUES ($1, $2)', [username, password]);
+            
+        const InsertQuery = `INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id;`
+        const response = await pgClient.query(InsertQuery, [username, password, email]);
+        
+        const userId = response.rows[0].id; // Get the inserted user ID
+        console.log("User ID:", userId);
+        
+        const AddQuery = `INSERT INTO addresses (city, country, street, pincode) VALUES ($1, $2, $3, $4)`;
+
+        
+        const res1 = await pgClient.query(AddQuery, [city, country, street, pincode]);
+        
+        //const response =  await pgClient.query('INSERT INTO "User" (username, password) VALUES ($1, $2)', [username, password]);
     res.json({
             message: "User created successfully"
     })
 
-    }catch(e){
+    }catch(e : any){
         res.json({
             message : 'error creating user',
+            error: e.message
         })
     }
 
